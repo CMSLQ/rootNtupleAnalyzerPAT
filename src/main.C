@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
   string * inputList      = new  string(argv[1]);
   string * cutFile        = new  string(argv[2]);
   string * treeName       = new  string(argv[3]);
-  TString * outputFileName= new TString(argv[4]);
+  string * outputFileName = new  string(argv[4]);
   string * cutEfficFile   = new  string(argv[5]);
 
   analysisClass analysisClass_(inputList, cutFile, treeName, outputFileName, cutEfficFile);

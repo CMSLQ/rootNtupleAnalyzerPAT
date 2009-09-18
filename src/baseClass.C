@@ -1,7 +1,7 @@
 #define baseClass_cxx
 #include "baseClass.h"
 
-baseClass::baseClass(string * inputList, string * cutFile, string * treeName, TString * outputFileName, string * cutEfficFile)
+baseClass::baseClass(string * inputList, string * cutFile, string * treeName, string * outputFileName, string * cutEfficFile)
 {
   std::cout << "baseClass::baseClass(): begins " << std::endl;
   inputList_ = inputList;
@@ -43,7 +43,8 @@ void baseClass::init()
   Init(tree_);
 
   char output_root_title[200];
-  sprintf(output_root_title,"%s%s",&std::string(*outputFileName_)[0],".root");
+  //sprintf(output_root_title,"%s%s",&std::string(*outputFileName_)[0],".root");
+  sprintf(output_root_title,"%s%s",&outputFileName_[0],".root");
   output_root_ = new TFile(&output_root_title[0],"RECREATE");
 
   //  for (map<string, cut>::iterator it = cutName_cut_.begin(); 

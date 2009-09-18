@@ -86,12 +86,12 @@ class baseClass : public rootNtupleClass {
   double baseClass::getHistoMax(const string& s);
 
 
-  baseClass(string * inputList, string * cutFile, string * treeName, TString *outputFileName=0, string * cutEfficFile=0);
+  baseClass(string * inputList, string * cutFile, string * treeName, string *outputFileName=0, string * cutEfficFile=0);
   virtual ~baseClass();
 
   private :
   string * configFile_;
-  TString * outputFileName_; 
+  string * outputFileName_; 
   TFile * output_root_;
   string * inputList_;
   string * cutFile_;
