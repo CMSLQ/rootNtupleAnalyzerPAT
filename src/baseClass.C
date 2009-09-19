@@ -42,11 +42,13 @@ void baseClass::init()
   }
   Init(tree_);
 
-  char output_root_title[200];
+  //char output_root_title[200];
   //sprintf(output_root_title,"%s%s",&std::string(*outputFileName_)[0],".root");
-  sprintf(output_root_title,"%s%s",&outputFileName_[0],".root");
-  output_root_ = new TFile(&output_root_title[0],"RECREATE");
+  //output_root_ = new TFile(&output_root_title[0],"RECREATE");
 
+  //directly from string
+  output_root_ = new TFile((*outputFileName_ + ".root").c_str(),"RECREATE");
+  
   //  for (map<string, cut>::iterator it = cutName_cut_.begin(); 
   //   it != cutName_cut_.end(); it++) STDOUT("cutName_cut->first = "<<it->first)
   //  for (vector<string>::iterator it = orderedCutNames_.begin(); 
