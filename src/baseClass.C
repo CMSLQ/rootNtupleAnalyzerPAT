@@ -786,17 +786,19 @@ int baseClass::getGlobalInfoNstart(char *pName)
   int NBeforeSkim = 0;
   STDOUT(pName<<"  "<< NBeforeSkim)
   TFile *f = new TFile(pName);
-//   f.cd("LJFilter/EventCount");
-  string s = "LJFilter/EventCount/EventCounter";
-  TH1I* hCount = (TH1I*)f->Get(s.c_str());
-  if( !hCount ) 
+  string s1 = "LJFilter/EventCount/EventCounter";
+  string s2 = "LJFilterPAT/EventCount/EventCounter";
+  TH1I* hCount1 = (TH1I*)f->Get(s1.c_str());
+  TH1I* hCount2 = (TH1I*)f->Get(s2.c_str());
+  if( !hCount1 && !hCount2 ) 
     {
       STDOUT("Skim filter histogram named "<<s<<" not found. Will assume skim was not made for ALL files.");
       skimWasMade_ = false;
       return NBeforeSkim;
     }
     
-  NBeforeSkim = (int)hCount->GetBinContent(1);
+  if (hCount1) NBeforeSkim = (int)hCount1->GetBinContent(1);
+  else NBeforeSkim = (int)hCount2->GetBinContent(1);
   
 //   STDOUT(pName<<"  "<< NBeforeSkim) 
   f->Close();
