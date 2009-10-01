@@ -792,7 +792,7 @@ int baseClass::getGlobalInfoNstart(char *pName)
   TH1I* hCount2 = (TH1I*)f->Get(s2.c_str());
   if( !hCount1 && !hCount2 ) 
     {
-      STDOUT("Skim filter histogram named "<<s<<" not found. Will assume skim was not made for ALL files.");
+      STDOUT("Skim filter histogram(s) not found. Will assume skim was not made for ALL files.");
       skimWasMade_ = false;
       return NBeforeSkim;
     }
