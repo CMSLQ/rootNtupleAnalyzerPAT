@@ -271,7 +271,7 @@ void baseClass::fillVariableWithValue(const string& s, const double& d)
   map<string, cut>::iterator cc = cutName_cut_.find(s);
   if( cc == cutName_cut_.end() )
     {
-      STDOUT("variableName = "<< s << "not found in cutName_cut_.");
+      //STDOUT("variableName = "<< s << " not found in cutName_cut_.");
       return;
     } 
   else
@@ -340,6 +340,10 @@ void baseClass::evaluateCuts()
 
 void baseClass::runOptimizer()
 {
+  // don't run optimizer if no optimized cuts specified
+  if (optimizeName_cut_.size()==0)
+    return;
+
   // first, check that all cuts passed
   h_optimizer_->Fill(-1,1); // always fill underflow counter each event; this serves as an event counter 
   if (combCutName_passed_["all"] == false)
