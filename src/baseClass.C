@@ -74,6 +74,8 @@ void baseClass::readInputList()
       while( is.getline(pName, 500, '\n') )
         {
           if (pName[0] == '#') continue;
+	  //if (pName[0] == ' ') continue; // do we want to skip lines that start with a space?
+	  if (pName[0] == '\n') continue;// simple protection against blank lines
           STDOUT("Adding file: " << pName);
           chain->Add(pName);
 	  NBeforeSkim = getGlobalInfoNstart(pName);
@@ -102,11 +104,42 @@ void baseClass::readCutFile()
     {
       //      STDOUT("Reading file: " << *cutFile_ );
       int id=0;
+      int optimize_count=0;
       while( getline(is,s) )
         {
           STDOUT("read line: " << s);
           if (s[0] == '#') continue;
 	  vector<string> v = split(s);
+	  if (v[1]=="OPT") // add code for grabbing optimizer objects
+	    {
+	      if (optimizeName_cut_.size()>=6)
+		{
+		  STDOUT("WARNING:  Optimizer can only accept up to 6 variables.\nVariable "<<v[0]<<" is not being included.");
+		  continue;
+		}
+	      bool found=false;
+	      for (int i=0;i<optimizeName_cut_.size();++i)
+		{
+		  if (optimizeName_cut_[i].variableName==v[0])
+		    {
+		      STDOUT("ERROR:  variableName = "<<v[0]<<" is already being optimized in optimizedName_cut_.  Skipping.");
+		      found=true;
+		      break;
+		    }
+		}
+	      if (found) continue;
+
+	      int level_int = atoi(v[5].c_str());
+	      bool greaterthan=true;
+	      if (v[2]=="<") greaterthan=false;
+	      double minval=atof(v[3].c_str());
+	      double maxval=atof(v[4].c_str());
+	      Optimize opt(optimize_count,v[0],minval, maxval, greaterthan, level_int);
+	      optimizeName_cut_[optimize_count]=opt; // order cuts by cut #, rather than name, so that optimization histogram is consistently ordered
+	      ++optimize_count;
+	      continue;
+	    }
+
 	  map<string, cut>::iterator cc = cutName_cut_.find(v[0]);
 	  if( cc != cutName_cut_.end() )
 	    {
@@ -203,6 +236,19 @@ void baseClass::readCutFile()
       STDOUT("ERROR opening cutFile:" << *cutFile_ );
       exit (1);
     }
+  // make optimizer histogram
+  if (optimizeName_cut_.size()>0)
+    {
+      h_optimizer_=new TH1F("optimizer","Optimization of cut variables",(int)pow(10,optimizeName_cut_.size()),0,
+			    pow(10,optimizeName_cut_.size()));
+    }
+
+  // Create a histogram that will show events passing cuts
+  int cutsize=orderedCutNames_.size()+1;
+  if (skimWasMade_) ++cutsize;
+  gDirectory->cd();
+  eventcuts_=new TH1F("EventsPassingCuts","Events Passing Cuts",cutsize,0,cutsize);
+
   is.close();
 
 }
@@ -237,6 +283,19 @@ void baseClass::fillVariableWithValue(const string& s, const double& d)
   return;
 }
 
+void baseClass::fillOptimizerWithValue(const string& s, const double& d)
+{
+  for (int i=0;i<optimizeName_cut_.size();++i)
+    {
+      if (optimizeName_cut_[i].variableName==s)
+	{
+	  optimizeName_cut_[i].value=d;
+	  return;
+	}
+    }
+  return;
+}
+
 void baseClass::evaluateCuts()
 {
   //  resetCuts();
@@ -261,6 +320,11 @@ void baseClass::evaluateCuts()
 	}
     }
 
+  // reset optimization cut values
+  for (int i=0;i<optimizeName_cut_.size();++i)
+    optimizeName_cut_[i].value=0;
+
+
   if( !fillCutHistos() )
     {
       STDOUT("ERROR: fillCutHistos did not complete successfully.");
@@ -273,6 +337,51 @@ void baseClass::evaluateCuts()
 
   return ;
 }
+
+void baseClass::runOptimizer()
+{
+  // first, check that all cuts passed
+  h_optimizer_->Fill(-1,1); // always fill underflow counter each event; this serves as an event counter 
+  if (combCutName_passed_["all"] == false)
+    return;
+  
+  // loop over up to 6 cuts
+  int counter=0;
+  int thesize=optimizeName_cut_.size();
+  int mysize=thesize;
+  std::vector<bool> counterbins;
+  for (int i=0;i<pow(10,thesize);++i) counterbins.push_back(true); // assume true
+  
+  // lowest-numbered cut appears first in cut ordering
+  // That is, for cut:  ABCDEF
+  //  A is the index of cut0, B is cut 1, etc.
+  for (int cc=0;cc<thesize;++cc) // loop over all cuts, starting at cut 0
+    {
+      --mysize;
+      for (int i=0;i<10;++i) // loop over 10 cuts for each
+	{
+	  if (!optimizeName_cut_[cc].Compare(i)) // cut failed; set all values associated with cut to false
+	    {
+	      // loop over  all cut values starting with current cut
+	      for (unsigned int j=(int)(i*pow(10,mysize));j<int(pow(10,thesize));++j)
+		{
+		  // if relevant digit of the cut value matches the current (failed) cut, set this cut to false 
+		  if ((j/int(pow(10,mysize)))%10==i)
+		    counterbins[j]=false;
+		  if (j>counterbins.size())
+		    continue; // shouldn't ever happen
+		}
+	    } // if (cut comparison failed)
+	} // for (int i=0;i<10;++i)
+    }
+  // now fill histograms
+  for (int i=0;i<counterbins.size();++i)
+    {
+      if (counterbins[i]==true)
+	h_optimizer_->Fill(i,1);
+      
+    }
+} //runOptimizer
 
 bool baseClass::passedCut(const string& s)
 {
@@ -606,6 +715,23 @@ bool baseClass::writeCutHistos()
       c->histo4.Write();
       c->histo5.Write();
     }
+  // Write optimization histograms
+  gDirectory->mkdir("Optimizer");
+  gDirectory->cd("Optimizer");
+  h_optimizer_->Write();
+  for (int i=0;i<optimizeName_cut_.size();++i)
+    {
+      stringstream x;
+      x<<"Cut"<<i<<"_"<<optimizeName_cut_[i].variableName;
+      if (optimizeName_cut_[i].testgreater==true)
+	x<<"_gt_";
+      else
+	x<<"_lt_";
+      x<<optimizeName_cut_[i].minvalue<<"_to_"<<optimizeName_cut_[i].maxvalue;
+      TObjString test(x.str().c_str());
+      test.Write();
+    }
+  gDirectory->cd("..");
   // Any failure mode to implement?
   return ret;
 }
@@ -629,6 +755,24 @@ bool baseClass::updateCutEffic()
 bool baseClass::writeCutEfficFile()
 {
   bool ret = true;
+
+  // Set bin labels for event counter histogram
+  int bincounter=1;
+  eventcuts_->GetXaxis()->SetBinLabel(bincounter,"NoCuts");
+  ++bincounter;
+  if (skimWasMade_)
+    {
+      eventcuts_->GetXaxis()->SetBinLabel(bincounter,"Skim");
+      ++bincounter;
+    }
+  for (int i=0;i<orderedCutNames_.size();++i)
+    {
+      eventcuts_->GetXaxis()->SetBinLabel(bincounter,orderedCutNames_[i].c_str());
+      ++bincounter;
+    }
+
+  bincounter=1;
+
   int nEntRoottuple = fChain->GetEntriesFast();
   int nEntTot = (skimWasMade_ ? NBeforeSkim_ : nEntRoottuple );
   string cutEfficFile = *cutEfficFile_ + ".dat";
@@ -665,7 +809,9 @@ bool baseClass::writeCutEfficFile()
   double effAbs;
   double effAbsErr;
   if(skimWasMade_)
-    {
+    { 
+      ++bincounter;
+      eventcuts_->SetBinContent(bincounter, nEntRoottuple);
       effRel = (double) nEntRoottuple / (double) NBeforeSkim_;
       effRelErr = sqrt( (double) effRel * (1.0 - (double) effRel) / (double) NBeforeSkim_ );
       effAbs = effRel;
@@ -692,6 +838,8 @@ bool baseClass::writeCutEfficFile()
        it != orderedCutNames_.end(); it++) 
     {
       cut * c = & (cutName_cut_.find(*it)->second);
+      ++bincounter;
+      eventcuts_->SetBinContent(bincounter, c->nEvtPassed);
       effRel = (double) c->nEvtPassed / (double) c->nEvtInput;
       effRelErr = sqrt( (double) effRel * (1.0 - (double) effRel) / (double) c->nEvtInput );
       effAbs = (double) c->nEvtPassed / (double) nEntTot;
