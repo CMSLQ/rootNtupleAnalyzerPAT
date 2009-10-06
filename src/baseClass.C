@@ -707,7 +707,7 @@ bool baseClass::fillCutHistos()
 }
 
 bool baseClass::writeCutHistos()
-{
+{ 
   bool ret = true;
   for (vector<string>::iterator it = orderedCutNames_.begin(); 
        it != orderedCutNames_.end(); it++) 
@@ -720,22 +720,25 @@ bool baseClass::writeCutHistos()
       c->histo5.Write();
     }
   // Write optimization histograms
-  gDirectory->mkdir("Optimizer");
-  gDirectory->cd("Optimizer");
-  h_optimizer_->Write();
-  for (int i=0;i<optimizeName_cut_.size();++i)
+  if (optimizeName_cut_.size())
     {
-      stringstream x;
-      x<<"Cut"<<i<<"_"<<optimizeName_cut_[i].variableName;
-      if (optimizeName_cut_[i].testgreater==true)
-	x<<"_gt_";
-      else
-	x<<"_lt_";
-      x<<optimizeName_cut_[i].minvalue<<"_to_"<<optimizeName_cut_[i].maxvalue;
-      TObjString test(x.str().c_str());
-      test.Write();
+      gDirectory->mkdir("Optimizer");
+      gDirectory->cd("Optimizer");
+      h_optimizer_->Write();
+      for (int i=0;i<optimizeName_cut_.size();++i)
+	{
+	  stringstream x;
+	  x<<"Cut"<<i<<"_"<<optimizeName_cut_[i].variableName;
+	  if (optimizeName_cut_[i].testgreater==true)
+	    x<<"_gt_";
+	  else
+	    x<<"_lt_";
+	  x<<optimizeName_cut_[i].minvalue<<"_to_"<<optimizeName_cut_[i].maxvalue;
+	  TObjString test(x.str().c_str());
+	  test.Write();
+	}
+      gDirectory->cd("..");
     }
-  gDirectory->cd("..");
   // Any failure mode to implement?
   return ret;
 }
