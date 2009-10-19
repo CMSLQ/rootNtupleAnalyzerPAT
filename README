@@ -28,10 +28,10 @@ Instructions:
 
 1) Checkout the code:
    export CVSROOT=:gserver:cmscvs.cern.ch:/cvs_server/repositories/CMSSW
-   cvs checkout -d rootNtupleAnalyzer UserCode/Leptoquarks/rootNtupleAnalyzer
+   cvs checkout -d rootNtupleAnalyzerPAT UserCode/Leptoquarks/rootNtupleAnalyzerPAT
 
 2) Generate the rootNtupleClass:
-   cd rootNtupleAnalyzer/
+   cd rootNtupleAnalyzerPAT/
    ./scripts/make_rootNtupleClass.sh   
       (you will be asked for input arguments)
 
@@ -65,7 +65,7 @@ Note2:
   a CVS area to commit all the analysis macros such as analysisClass_XXX.C
   has been prepared in 
   http://cmssw.cvs.cern.ch/cgi-bin/cmssw.cgi/UserCode/Leptoquarks/rootNtupleMacros/src/
-  This will allow to separate the developments of the rootNtupleAnalyzer package
+  This will allow to separate the developments of the rootNtupleAnalyzerPAT package
   and the developments of the analysis macros.
   In order to compile and run an analysis macro
     /...fullPath.../rootNtupleMacros/src/analysisClass_XXX.C
@@ -136,19 +136,33 @@ See ./doc/howToMakeAnalysisWithRootTuples.txt
 
 
 
-Using the Optimizer:
---------------------
+Using the Optimizer (Jeff Temple):
+----------------------------------
 
-The input cut file can also specify variables to be used in optimization studies.  To do so, specify "OPT" for minValue1, and then either ">" or "<" under maxValue1.  (The ">" sign will pass values greater than the applied threshold, and "<" will pass those less than the threshold.)  The minValue2 and maxValue2 values should be the minimum and maximum thresholds you wish to apply when scanning for optimal cuts.  This optimizer will scan 10 different values, evenly distributed over the inclusive range [minValue2, maxValue2].   The "level" value does not need to be specified.
+The input cut file can also specify variables to be used in optimization studies.  
+To do so, specify "OPT" for minValue1, and then either ">" or "<" under maxValue1.  
+(The ">" sign will pass values greater than the applied threshold, and "<" will pass 
+those less than the threshold.)  The minValue2 and maxValue2 values should be the minimum 
+and maximum thresholds you wish to apply when scanning for optimal cuts.  
+This optimizer will scan 10 different values, evenly distributed over 
+the inclusive range [minValue2, maxValue2]. At the moment, the "level" value is not used and 
+does not need to be specified.
 
-The optimization cuts are always run after all the other cuts in the file, and are only run when all other cuts are passed.  An example of the optimization syntax is:
+The optimization cuts are always run after all the other cuts in the file, and are only run 
+when all other cuts are passed.  An example of the optimization syntax is:
 
 #VariableName         minValue1(<) maxValue1(>=)        minValue2(<)    maxValue2(>=)   level   histoNbinsMinMax
 #------------         ------------ -------------        ------------    -------------   -----   ----------------
 muonPt               OPT          >                    10              55              5
 
 
-This will make 10 different cuts on muonPt, at [10, 15, 20, 25, ..., 55].  (Cut level '5' is meaningless here.)
-The output of the optimization will be a 10-bin histogram, showing the number of events passing each of the 10 thresholds. 
+NOTE: for the moment, in the .cc file the variable to be optimized should be "filled" by using 
+the method "fillOptimizerWithValue" instead of "fillVariableWithValue". --> NEED IMPROVEMENT
 
-Multiple optimization cuts may be applied in the same file.  In the case where N optimization cuts are applied, a histogram of 10^N bins will be produced, with each bin corresponding to a unique cut combination.  No more than 6 variables may be optimized at one time.
+This will make 10 different cuts on muonPt, at [10, 15, 20, 25, ..., 55].  (Cut level '5' is meaningless here.)
+The output of the optimization will be a 10-bin histogram, showing the number of 
+events passing each of the 10 thresholds. 
+
+Multiple optimization cuts may be applied in the same file.  In the case where N optimization cuts 
+are applied, a histogram of 10^N bins will be produced, with each bin corresponding to a unique cut combination.  
+No more than 6 variables may be optimized at one time (limitation in the number of bins for a TH1F ~ 10^6).
