@@ -20,11 +20,11 @@ baseClass::~baseClass()
     {
       STDOUT("ERROR: writeCutHistos did not complete successfully.");
     }
-  output_root_->Close();
   if( !writeCutEfficFile() )
     {
       STDOUT("ERROR: writeStatFile did not complete successfully.");
     }
+  output_root_->Close();
   std::cout << "baseClass::~baseClass(): end " << std::endl;
 }
 
@@ -280,6 +280,7 @@ void baseClass::fillVariableWithValue(const string& s, const double& d)
       c->filled = true;
       c->value = d;
     }
+  fillOptimizerWithValue(s, d);
   return;
 }
 
@@ -321,9 +322,9 @@ void baseClass::evaluateCuts()
     }
 
   // reset optimization cut values
-  for (int i=0;i<optimizeName_cut_.size();++i)
-    optimizeName_cut_[i].value=0;
-
+  //for (int i=0;i<optimizeName_cut_.size();++i)
+  //  optimizeName_cut_[i].value=0;
+  runOptimizer();
 
   if( !fillCutHistos() )
     {
@@ -340,15 +341,36 @@ void baseClass::evaluateCuts()
 
 void baseClass::runOptimizer()
 {
+
   // don't run optimizer if no optimized cuts specified
   if (optimizeName_cut_.size()==0)
     return;
 
-  // first, check that all cuts passed
-  h_optimizer_->Fill(-1,1); // always fill underflow counter each event; this serves as an event counter 
+  // first, check that all cuts (except those to be optimized) have been passed
+
+  for (vector<string>::iterator it = orderedCutNames_.begin(); 
+       it != orderedCutNames_.end(); it++) 
+    {
+      bool ignorecut=false;
+      for (unsigned int i=0; i < optimizeName_cut_.size();++i)
+	{
+	  const string str = (const string)(*it);
+	  if (optimizeName_cut_[i].variableName.compare(str)==0)
+	    {
+	      ignorecut=true;
+	      break;
+	    }
+	}
+      if (ignorecut) continue;
+      if (passedCut(*it) == false)
+	return;
+    }
+
+  /*
   if (combCutName_passed_["all"] == false)
     return;
-  
+  */
+
   // loop over up to 6 cuts
   int counter=0;
   int thesize=optimizeName_cut_.size();
@@ -385,6 +407,8 @@ void baseClass::runOptimizer()
 	h_optimizer_->Fill(i,1);
       
     }
+
+  return;
 } //runOptimizer
 
 bool baseClass::passedCut(const string& s)
@@ -719,26 +743,7 @@ bool baseClass::writeCutHistos()
       c->histo4.Write();
       c->histo5.Write();
     }
-  // Write optimization histograms
-  if (optimizeName_cut_.size())
-    {
-      gDirectory->mkdir("Optimizer");
-      gDirectory->cd("Optimizer");
-      h_optimizer_->Write();
-      for (int i=0;i<optimizeName_cut_.size();++i)
-	{
-	  stringstream x;
-	  x<<"Cut"<<i<<"_"<<optimizeName_cut_[i].variableName;
-	  if (optimizeName_cut_[i].testgreater==true)
-	    x<<"_gt_";
-	  else
-	    x<<"_lt_";
-	  x<<optimizeName_cut_[i].minvalue<<"_to_"<<optimizeName_cut_[i].maxvalue;
-	  TObjString test(x.str().c_str());
-	  test.Write();
-	}
-      gDirectory->cd("..");
-    }
+
   // Any failure mode to implement?
   return ret;
 }
@@ -759,10 +764,12 @@ bool baseClass::updateCutEffic()
   return ret;
 }
 
+
 bool baseClass::writeCutEfficFile()
 {
-  bool ret = true;
 
+  bool ret = true;
+  
   // Set bin labels for event counter histogram
   int bincounter=1;
   eventcuts_->GetXaxis()->SetBinLabel(bincounter,"NoCuts");
@@ -791,32 +798,39 @@ bool baseClass::writeCutEfficFile()
 
   int cutIdPed=0;
   os.precision(4); 
-  os << "################################## Cuts #####################################################################################\n"
-     <<"#id             variableName           min1           max1           min2           max2          level              N          Npass         EffRel      errEffRel         EffAbs      errEffAbs"<<endl
+  os << "################################## Cuts #####################################################################################\n" 
+     << "#id             variableName          "
+    //<<" min1        max1        min2        max2       "
+     <<"level           N          Npass        EffRel      errEffRel         EffAbs      errEffAbs"<<endl
      << fixed
      << setw(3) << cutIdPed 
      << setw(25) << "nocut" 
      << setprecision(4) 
-     << setw(15) << "-"
-     << setw(15) << "-"
-     << setw(15) << "-"
-     << setw(15) << "-"
-     << setw(15) << "-"
+    //<< setw(12) << "-"
+    //<< setw(12) << "-"
+    //<< setw(12) << "-"
+    //<< setw(12) << "-"
+     << setw(12) << "-"
      << setw(15) << nEntTot
      << setw(15) << nEntTot
      << setprecision(11) 
-     << setw(15) << "1.00000000000"
-     << setw(15) << "0.00000000000"
-     << setw(15) << "1.00000000000"
-     << setw(15) << "0.00000000000"
+     << setw(15) << "1.00000"
+     << setw(15) << "0.00000"
+     << setw(15) << "1.00000"
+     << setw(15) << "0.00000"
      << endl;
 
   double effRel;
   double effRelErr;
   double effAbs;
   double effAbsErr;
+
+  eventcuts_->SetBinContent(bincounter,nEntTot);
+  if (optimizeName_cut_.size())
+    h_optimizer_->SetBinContent(0, nEntTot);
+
   if(skimWasMade_)
-    { 
+    {
       ++bincounter;
       eventcuts_->SetBinContent(bincounter, nEntRoottuple);
       effRel = (double) nEntRoottuple / (double) NBeforeSkim_;
@@ -827,14 +841,14 @@ bool baseClass::writeCutEfficFile()
 	 << setw(3) << ++cutIdPed
 	 << setw(25) << "skim" 
 	 << setprecision(4) 
-	 << setw(15) << "-"
-	 << setw(15) << "-"
-	 << setw(15) << "-"
-	 << setw(15) << "-"
-	 << setw(15) << "-"
+	//<< setw(12) << "-"
+	//<< setw(12) << "-"
+	//<< setw(12) << "-"
+	//<< setw(12) << "-"
+	 << setw(12) << "-"
 	 << setw(15) << NBeforeSkim_
 	 << setw(15) << nEntRoottuple
-	 << setprecision(11) 
+	 << setprecision(6) 
 	 << setw(15) << effRel
 	 << setw(15) << effRelErr
 	 << setw(15) << effAbs
@@ -875,23 +889,47 @@ bool baseClass::writeCutEfficFile()
 	 << setw(25) << c->variableName 
 	 << setprecision(4)
 	 << fixed 
-	 << setw(15) << ( ( c->minValue1 == -9999999.0 ) ? "-inf" : ssm1.str() )
-	 << setw(15) << ( ( c->maxValue1 ==  9999999.0 ) ? "+inf" : ssM1.str() )
-	 << setw(15) << ( ( c->minValue2 > c->maxValue2 ) ? "-" : ssm2.str() )
-	 << setw(15) << ( ( c->minValue2 > c->maxValue2 ) ? "-" : ssM2.str() )
-	 << setw(15) << c->level_int
+	//<< setw(12) << ( ( c->minValue1 == -9999999.0 ) ? "-inf" : ssm1.str() )
+	//<< setw(12) << ( ( c->maxValue1 ==  9999999.0 ) ? "+inf" : ssM1.str() )
+	//<< setw(12) << ( ( c->minValue2 > c->maxValue2 ) ? "-" : ssm2.str() )
+	//<< setw(12) << ( ( c->minValue2 > c->maxValue2 ) ? "-" : ssM2.str() )
+	 << setw(12) << c->level_int
 	 << setw(15) << c->nEvtInput
 	 << setw(15) << c->nEvtPassed
-	 << setprecision(11) 
+	 << setprecision(6) 
 	 << setw(15) << effRel
 	 << setw(15) << effRelErr
 	 << setw(15) << effAbs
 	 << setw(15) << effAbsErr
 	 << endl;
     }
+
+  // Write optimization histograms
+  if (optimizeName_cut_.size())
+    {
+      gDirectory->mkdir("Optimizer");
+      gDirectory->cd("Optimizer");
+      h_optimizer_->Write();
+      for (int i=0;i<optimizeName_cut_.size();++i)
+	{
+	  stringstream x;
+	  x<<"Cut"<<i<<"_"<<optimizeName_cut_[i].variableName;
+	  if (optimizeName_cut_[i].testgreater==true)
+	    x<<"_gt_";
+	  else
+	    x<<"_lt_";
+	  x<<optimizeName_cut_[i].minvalue<<"_to_"<<optimizeName_cut_[i].maxvalue;
+	  TObjString test(x.str().c_str());
+	  test.Write();
+	}
+      gDirectory->cd("..");
+    }
+
+  eventcuts_->Write(); // write here, since WriteCutHistos is called before WriteCutEfficFile
   // Any failure mode to implement?
   return ret;
-}
+} // writeCutEffFile
+
 
 bool baseClass::sortCuts(const cut& X, const cut& Y)
 {
