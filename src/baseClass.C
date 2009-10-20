@@ -799,18 +799,16 @@ bool baseClass::writeCutEfficFile()
   int cutIdPed=0;
   os.precision(4); 
   os << "################################## Cuts #####################################################################################\n" 
-     << "#id             variableName          "
-    //<<" min1        max1        min2        max2       "
-     <<"level           N          Npass        EffRel      errEffRel         EffAbs      errEffAbs"<<endl
+     <<"#id             variableName           min1           max1           min2           max2          level              N          Npass         EffRel      errEffRel         EffAbs      errEffAbs"<<endl
      << fixed
      << setw(3) << cutIdPed 
      << setw(25) << "nocut" 
      << setprecision(4) 
-    //<< setw(12) << "-"
-    //<< setw(12) << "-"
-    //<< setw(12) << "-"
-    //<< setw(12) << "-"
-     << setw(12) << "-"
+     << setw(15) << "-"
+     << setw(15) << "-"
+     << setw(15) << "-"
+     << setw(15) << "-"
+     << setw(15) << "-"
      << setw(15) << nEntTot
      << setw(15) << nEntTot
      << setprecision(11) 
@@ -841,11 +839,11 @@ bool baseClass::writeCutEfficFile()
 	 << setw(3) << ++cutIdPed
 	 << setw(25) << "skim" 
 	 << setprecision(4) 
-	//<< setw(12) << "-"
-	//<< setw(12) << "-"
-	//<< setw(12) << "-"
-	//<< setw(12) << "-"
-	 << setw(12) << "-"
+	 << setw(15) << "-"
+	 << setw(15) << "-"
+	 << setw(15) << "-"
+	 << setw(15) << "-"
+	 << setw(15) << "-"
 	 << setw(15) << NBeforeSkim_
 	 << setw(15) << nEntRoottuple
 	 << setprecision(6) 
@@ -889,11 +887,11 @@ bool baseClass::writeCutEfficFile()
 	 << setw(25) << c->variableName 
 	 << setprecision(4)
 	 << fixed 
-	//<< setw(12) << ( ( c->minValue1 == -9999999.0 ) ? "-inf" : ssm1.str() )
-	//<< setw(12) << ( ( c->maxValue1 ==  9999999.0 ) ? "+inf" : ssM1.str() )
-	//<< setw(12) << ( ( c->minValue2 > c->maxValue2 ) ? "-" : ssm2.str() )
-	//<< setw(12) << ( ( c->minValue2 > c->maxValue2 ) ? "-" : ssM2.str() )
-	 << setw(12) << c->level_int
+	 << setw(15) << ( ( c->minValue1 == -9999999.0 ) ? "-inf" : ssm1.str() )
+	 << setw(15) << ( ( c->maxValue1 ==  9999999.0 ) ? "+inf" : ssM1.str() )
+	 << setw(15) << ( ( c->minValue2 > c->maxValue2 ) ? "-" : ssm2.str() )
+	 << setw(15) << ( ( c->minValue2 > c->maxValue2 ) ? "-" : ssM2.str() )
+	 << setw(15) << c->level_int
 	 << setw(15) << c->nEvtInput
 	 << setw(15) << c->nEvtPassed
 	 << setprecision(6) 
