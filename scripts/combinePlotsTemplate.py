@@ -190,6 +190,12 @@ for n, lin in enumerate( open( options.inputList ) ):
             histoName = file.GetListOfKeys()[h].GetName()
             htemp = file.Get(histoName)
 
+            #
+            #temporary
+            #
+            if "TDir" in htemp.__repr__():
+                htemp = file.Get(histoName + "/optimizer")
+
             #thanks Riccardo
             if "TH2" in htemp.__repr__():
                 continue
