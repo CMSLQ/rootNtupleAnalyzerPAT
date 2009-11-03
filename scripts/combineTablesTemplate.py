@@ -356,7 +356,8 @@ for n, lin in enumerate( open( options.inputList ) ):
         else:
             N = ( float(data[j]['N']) * weight )
             errN = ( float(data[j-1]["errEffAbs"]) * xsection_X_intLumi )
-            print errN
+            print data[j]['variableName']
+            print "errN: " , errN
             if(str(errN) == "nan"):
                 errN = 0
                 
@@ -367,7 +368,8 @@ for n, lin in enumerate( open( options.inputList ) ):
             
             Npass = ( float(data[j]['Npass']) * weight) 
             errNpass = ( float(data[j]["errEffAbs"]) * xsection_X_intLumi )
-            print errNpass
+            print "errNPass " , errNpass
+            print ""
             if(str(errNpass) == "nan"):
                 errNpass = 0
 
