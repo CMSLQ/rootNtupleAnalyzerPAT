@@ -846,7 +846,7 @@ bool baseClass::writeCutEfficFile()
 	 << setw(15) << "-"
 	 << setw(15) << NBeforeSkim_
 	 << setw(15) << nEntRoottuple
-	 << setprecision(6) 
+	 << setprecision(11) 
 	 << setw(15) << effRel
 	 << setw(15) << effRelErr
 	 << setw(15) << effAbs
