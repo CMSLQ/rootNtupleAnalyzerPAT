@@ -6,9 +6,11 @@ usage ()
         echo "Usage:   $0 -d directory -t TTreeName "
         echo "where:   directory is the location of the *.root files to be analyzed"
         echo "Example: $0 -d /home/data/RootTuples/Leptoquarks/V00-00-09_2009310_142420/output -t RootTupleMaker"
+        echo "Example: $0 -d /home/data/RootTuples/Leptoquarks/LQenujj-10TeV-CMSSW2-PAT-V00-00-07_091016_212933/output -t treeCreator/RootTupleMakerPAT"
         echo ""
         echo "      Note: the option \"-d directory\" can be replaced by \"-f filename\" in case of a single root file to be analyzed"
         echo "            Example: $0 -f data/input/Exotica_LQtoUE_M250__Summer08_IDEAL_V9_v1__GEN-SIM-RECO_1.root -t RootTupleMaker"
+        echo "            Example: $0 -f LQ_ue_600_10TeV_enuejj__ferencek-LQ_ue_600_10TeV_enuejj-6e2b1038c288aef5f9e332910cc64b07__USER_8.root -t treeCreator/RootTupleMakerPAT"
         echo ""
         exit 1;
 }
