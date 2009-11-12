@@ -108,8 +108,9 @@ void baseClass::readCutFile()
       while( getline(is,s) )
         {
           STDOUT("read line: " << s);
-          if (s[0] == '#') continue;
+          if (s[0] == '#' || s.empty()) continue;
 	  vector<string> v = split(s);
+	  if ( v.size() == 0 ) continue;
 	  if (v[1]=="OPT") // add code for grabbing optimizer objects
 	    {
 	      if (optimizeName_cut_.size()>=6)
