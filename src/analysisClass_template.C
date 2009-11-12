@@ -105,6 +105,11 @@ void analysisClass::Loop()
      if( passedCut("pT1stEle") ) h_pT1stEle->Fill(elePt[v_idx_ele_final[0]]);
      if( passedCut("pT2ndEle") ) h_pT2ndEle->Fill(elePt[v_idx_ele_final[1]]);
      
+     // retrieve value of previously filled variables (after making sure that they were filled)
+     double totpTEle;
+     if ( variableIsFilled("pT1stEle") && variableIsFilled("pT2ndEle") ) 
+       totpTEle = getVariableValue("pT1stEle")+getVariableValue("pT2ndEle");
+
      // reject events that did not pass level 0 cuts
      if( !passedCut("0") ) continue;
      // ......

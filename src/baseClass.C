@@ -285,6 +285,32 @@ void baseClass::fillVariableWithValue(const string& s, const double& d)
   return;
 }
 
+bool baseClass::variableIsFilled(const string& s)
+{
+  map<string, cut>::iterator cc = cutName_cut_.find(s);
+  if( cc == cutName_cut_.end() )
+    {
+      STDOUT("ERROR: did not find variableName = "<<s<<" in cutName_cut_. Returning");
+    }
+  cut * c = & (cc->second);
+  return (c->filled);
+}
+
+double baseClass::getVariableValue(const string& s)
+{
+  map<string, cut>::iterator cc = cutName_cut_.find(s);
+  if( cc == cutName_cut_.end() )
+    {
+      STDOUT("ERROR: did not find variableName = "<<s<<" in cutName_cut_.");
+    }
+  cut * c = & (cc->second);
+  if( !variableIsFilled(s) )
+    {
+      STDOUT("ERROR: requesting value of not filled variable "<<s);
+    }
+  return (c->value);
+}
+
 void baseClass::fillOptimizerWithValue(const string& s, const double& d)
 {
   for (int i=0;i<optimizeName_cut_.size();++i)

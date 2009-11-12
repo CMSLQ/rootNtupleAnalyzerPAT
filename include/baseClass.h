@@ -120,6 +120,8 @@ class baseClass : public rootNtupleClass {
   bool baseClass::passedAllPreviousCuts(const string& s);
   bool baseClass::passedAllOtherCuts(const string& s);
   bool baseClass::passedAllOtherSameAndLowerLevelCuts(const string& s);
+  bool baseClass::variableIsFilled(const string& s);
+  double baseClass::getVariableValue(const string& s);
   double baseClass::getPreCutValue1(const string& s);
   double baseClass::getPreCutValue2(const string& s);
   double baseClass::getPreCutValue3(const string& s);
