@@ -156,9 +156,6 @@ when all other cuts are passed.  An example of the optimization syntax is:
 muonPt               OPT          >                    10              55              5
 
 
-NOTE: for the moment, in the .cc file the variable to be optimized should be "filled" by using 
-the method "fillOptimizerWithValue" instead of "fillVariableWithValue". --> NEED IMPROVEMENT
-
 This will make 10 different cuts on muonPt, at [10, 15, 20, 25, ..., 55].  (Cut level '5' is meaningless here.)
 The output of the optimization will be a 10-bin histogram, showing the number of 
 events passing each of the 10 thresholds. 
