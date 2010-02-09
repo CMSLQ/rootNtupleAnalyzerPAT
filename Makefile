@@ -1,6 +1,7 @@
 COMP=c++ 
 FLAGS = 
 #FLAGS += -DUSE_EXAMPLE 
+#FLAGS += -DCREATE_OPT_CUT_FILE
 ROOTLIBS = `root-config --glibs --cflags` -lMinuit 
 INC= -I.. -I. -I./include  -I${CLHEP}/include 
 ROOTINC= -I${ROOTSYS}/include
