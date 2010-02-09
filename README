@@ -140,26 +140,33 @@ Using the Optimizer (Jeff Temple):
 ----------------------------------
 
 The input cut file can also specify variables to be used in optimization studies.  
-To do so, specify "OPT" for minValue1, and then either ">" or "<" under maxValue1.  
+To do so, add a line in the file for each variable to optimize. The first field of a line
+must be the name of the variable, second field must be "OPT", third field either ">" or "<".
 (The ">" sign will pass values greater than the applied threshold, and "<" will pass 
-those less than the threshold.)  The minValue2 and maxValue2 values should be the minimum 
+those less than the threshold.) 4th and 5th fields should be the minimum 
 and maximum thresholds you wish to apply when scanning for optimal cuts.  
+An example of the optimization syntax is:
+
+#VariableName     must be OPT   > or <    RangeMin        RangeMax        unused
+#------------     -----------   ------    ------------    -------------   ------
+muonPt               OPT          >          10              55              5
+
 This optimizer will scan 10 different values, evenly distributed over 
-the inclusive range [minValue2, maxValue2]. At the moment, the "level" value is not used and 
+the inclusive range [RangeMin, RangeMax]. At the moment, the 6th value is not used and 
 does not need to be specified.
-
 The optimization cuts are always run after all the other cuts in the file, and are only run 
-when all other cuts are passed.  An example of the optimization syntax is:
-
-#VariableName         minValue1(<) maxValue1(>=)        minValue2(<)    maxValue2(>=)   level   histoNbinsMinMax
-#------------         ------------ -------------        ------------    -------------   -----   ----------------
-muonPt               OPT          >                    10              55              5
-
-
-This will make 10 different cuts on muonPt, at [10, 15, 20, 25, ..., 55].  (Cut level '5' is meaningless here.)
+when all other cuts are passed.  
+The above line will make 10 different cuts on muonPt, at [10, 15, 20, 25, ..., 55].  
+('5' in the 6th field is meaningless here.)
 The output of the optimization will be a 10-bin histogram, showing the number of 
 events passing each of the 10 thresholds. 
 
 Multiple optimization cuts may be applied in the same file.  In the case where N optimization cuts 
 are applied, a histogram of 10^N bins will be produced, with each bin corresponding to a unique cut combination.  
 No more than 6 variables may be optimized at one time (limitation in the number of bins for a TH1F ~ 10^6).
+Since such file can become quite large, the default is to not create
+
+A file (optimizationCuts.txt in the working directory) that lists the cut values applied for 
+each bin can be produced by uncommenting the line
+#FLAGS += -DCREATE_OPT_CUT_FILE
+in the Makefile. Since this file can be quite large (10^N lines), by default it is not created.
