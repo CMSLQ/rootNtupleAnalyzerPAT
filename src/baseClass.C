@@ -111,6 +111,7 @@ void baseClass::readCutFile()
           if (s[0] == '#' || s.empty()) continue;
 	  vector<string> v = split(s);
 	  if ( v.size() == 0 ) continue;
+          STDOUT("starting OPT code");
 	  if (v[1]=="OPT") // add code for grabbing optimizer objects
 	    {
 	      if (optimizeName_cut_.size()>=6)
@@ -272,7 +273,7 @@ void baseClass::fillVariableWithValue(const string& s, const double& d)
   map<string, cut>::iterator cc = cutName_cut_.find(s);
   if( cc == cutName_cut_.end() )
     {
-      //STDOUT("variableName = "<< s << " not found in cutName_cut_.");
+      STDOUT("ERROR: variableName = "<< s << " not found in cutName_cut_. Returning");
       return;
     } 
   else
@@ -932,6 +933,44 @@ bool baseClass::writeCutEfficFile()
   // Write optimization histograms
   if (optimizeName_cut_.size())
     {
+#ifdef CREATE_OPT_CUT_FILE
+      //std::string optFileName = *outputFileName_+"_optimization.txt";
+      std::string optFileName = "optimizationCuts.txt";
+      std::ofstream optFile( optFileName.c_str() );
+      if ( !optFile.good() ) 
+	{ 
+	  STDOUT("ERROR: cannot open file "<< optFileName.c_str() ) ;
+	}
+
+      // Add code for printing histogram output
+      int Nbins=h_optimizer_->GetNbinsX();
+      for (int i=0;i<Nbins;++i)
+	{
+	  std::vector<int> cutindex;
+	  // cutindex will store histogram bin as a series of integers
+	  // 12345 = {1,2,3,4,5}, etc.
+	  
+	  optFile <<"Bin = "<<i; 
+	  for (int j=Nbins/10;j>=1;j/=10)
+	    {
+	      cutindex.push_back((i/j)%10);
+	    }  // for (int j=(int)log10(Nbins);...)
+	  
+	  for (unsigned int j=0;j<cutindex.size();++j)
+	    {
+	      optFile <<"\t"<< optimizeName_cut_[j].variableName <<" ";
+	      if (optimizeName_cut_[j].testgreater==true)
+		optFile <<"> "<<optimizeName_cut_[j].minvalue+optimizeName_cut_[j].increment*cutindex[j];
+	      //I'm not sure this is how I implemented the < cut; need to check.
+	      else
+		optFile <<"< "<<optimizeName_cut_[j].maxvalue-optimizeName_cut_[j].increment*cutindex[j];
+	    } //for (unsigned int j=0;...)
+	  optFile <<endl;
+	  //optFile <<"\t Entries = "<<h_optimizer_->GetBinContent(i+1)<<endl;
+	  
+	} // for (int i=0;...)
+#endif // CREATE_OPT_CUT_FILE
+
       gDirectory->mkdir("Optimizer");
       gDirectory->cd("Optimizer");
       h_optimizer_->Write();
