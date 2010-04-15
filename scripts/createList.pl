@@ -47,7 +47,10 @@ for $file(@inputList)
 {
 
     ## split each line
-    my ($dataset) = split( /\_\d+\.root/ , $file );
+    my ($foo) = ""; ($foo) = grep(/\_\d+\_\d+\.root/, $file);
+    my ($dataset) = "";
+    if ($foo ne "") {($dataset) = split( /\_\d+\_\d+\.root/ , $file );}
+    else {($dataset) = split( /\_\d+\.root/ , $file );}
     #print "$dataset\n";
 
     $listfilename="$dataset.txt";
@@ -65,7 +68,10 @@ for $file(@inputList)
     #print "$file\n";
 
     ## split each line
-    my ($dataset) = split( /\_\d+\.root/ , $file );
+    my ($foo) = ""; ($foo) = grep(/\_\d+\_\d+\.root/, $file);
+    my ($dataset) = "";
+    if ($foo ne "") {($dataset) = split( /\_\d+\_\d+\.root/ , $file );}
+    else {($dataset) = split( /\_\d+\.root/ , $file );}
     #print "$dataset\n";
 
     $listfilename="$outputDir/$dataset.txt";
